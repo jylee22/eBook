@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Board">
+	<!-- 게시판 목록 --> 
+  <select id="BoardList" resultType="com.ebook.board.vo.BoardVo">
+		SELECT ROW_NUMBER() OVER(ORDER BY POSTKEY) SORTING, POSTKEY, POSTCATEGORY, USERID, POSTTITLE, POSTCONTENT, TO_CHAR(POSTDATE, 'YYYY-MM-DD') POSTDATE, POSTVIEWCOUNT, BNUM, LVL, STEP, NREF
+		FROM POST
+		WHERE POSTCATEGORY = #{postCategory}
+		ORDER BY SORTING DESC
+  </select>
+  
+  <!-- 게시판 보기 --> 
+	<select id="BoardView" resultType="com.ebook.board.vo.BoardVo">
+		SELECT P.POSTKEY, M.MENU_CTGR, M.POSTCATEGORY, P.USERID, P.POSTTITLE, P.POSTCONTENT,
+		TO_CHAR(P.POSTDATE, 'YYYY-MM-DD') POSTDATE, P.POSTVIEWCOUNT, P.BNUM, P.LVL, P.STEP, P.NREF
+		FROM POST P, BOARDMENUS M
+		WHERE P.POSTCATEGORY = M.POSTCATEGORY 
+		      AND P.POSTKEY = #{postKey}
+		ORDER BY P.POSTKEY DESC
+  </select>
+	
+	<!-- 게시판 조회수 -->
+  <update id="ReadCountUpdate">
+   UPDATE  POST
+    SET    POSTVIEWCOUNT = POSTVIEWCOUNT + 1     
+    WHERE  POSTKEY  = #{postKey}        
+ 	</update>
+ 	
+ 	<!-- 게시글 작성 -->
+  <insert id="BoardInsert">
+  	INSERT INTO POST(POSTKEY, POSTCATEGORY, USERID, POSTTITLE, POSTCONTENT, POSTDATE, POSTVIEWCOUNT, BNUM, LVL, STEP, NREF) 
+		VALUES(
+		    POST_SEQ.NEXTVAL, #{postCategory}, #{userId}, #{postTitle}, #{postContent}, SYSDATE, 0, 
+		    POST_SEQ.NEXTVAL, 0, 0, POST_SEQ.NEXTVAL
+		)
+  </insert>
+  
+  <!-- 게시글 수정 -->
+	<update id="BoardUpdate">
+		UPDATE POST
+		SET POSTTITLE = #{postTitle}, POSTCONTENT = #{postContent}
+		WHERE POSTKEY = #{postKey}  and POSTCATEGORY = #{postCategory}
+	</update>
+	
+	<!-- 게시글 삭제 -->
+   <delete id="BoardDelete">
+     DELETE FROM POST
+     WHERE POSTKEY = #{ postKey } 
+   </delete>
+   
+  <!-- 도서 요청 작성 -->
+  <insert id="RequestInsert">
+  	INSERT INTO REQUEST (REQ_KEY, POSTCATEGORY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS)
+  	VALUES (
+  		POST_SEQ.NEXTVAL, 
+  		#{postCategory}, #{req_book}, #{req_date}, #{userId}, #{req_cont}, #{req_process}
+  	)
+  </insert>
+  
+  <!-- 게시글 검색 -->
+  <select id="BoardPage" resultType="com.ebook.board.vo.BoardVo">
+  	SELECT POSTKEY, POSTCATEGORY, USERID, POSTTITLE, POSTCONTENT, POSTDATE, POSTVIEWCOUNT, BNUM, LVL, STEP, NREF
+  	FROM (
+  		SELECT ROW_NUMBER() OVER(ORDER BY POSTKEY DESC) BOARDSORT,
+  		POSTKEY, POSTCATEGORY, USERID, POSTTITLE, POSTCONTENT, POSTDATE, POSTVIEWCOUNT, BNUM, LVL, STEP, NREF
+  		FROM POST
+  		WHERE POSTCATEGORY = #{postCategory}
+  	) B
+  	WHERE BOARDSORT BETWEEN #{rowStart} AND #{rowEnd}
+  	ORDER BY POSTKEY DESC
+  </select>
+  
+  <!-- 총 갯수 -->
+  <select id="BoardCount" resultType="_int">
+  	SELECT COUNT(POSTKEY) AS totalCount
+  	FROM POST
+  	WHERE POSTCATEGORY = #{postCategory} AND POSTKEY > 0
+  </select>
+  
+  <!-- 댓글 목록 -->
+  <select id="CommentList" resultType="com.ebook.board.vo.CommentVo">
+  	SELECT COMMIDX,POSTKEY,POSTCATEGORY,USERID,COMMCONT,COMMDATE
+  	FROM BOARD_COMMENT
+  	WHERE POSTKEY = #{postKey}
+  	ORDER BY COMMIDX DESC
+  </select>
+  
+  <!-- 댓글 작성 -->
+  <insert id="CommentInsert">
+  	INSERT INTO BOARD_COMMENT(COMMIDX,POSTKEY,POSTCATEGORY,USERID,COMMCONT,COMMDATE)
+  	VALUES (
+  		POST_SEQ.NEXTVAL, #{postKey}, #{postCategory}, #{userId}, #{commCont}, SYSDATE
+  	)
+  </insert>
+  
+  <!-- 댓글 정보 가져오기 -->
+  <select id="Comment" resultType="com.ebook.board.vo.CommentVo">
+  	SELECT COMMIDX,POSTKEY,POSTCATEGORY,USERID,COMMCONT,COMMDATE
+  	FROM BOARD_COMMENT
+  	WHERE POSTKEY = #{postKey} AND COMMIDX = #{commIdx}
+  	ORDER BY COMMIDX DESC
+  </select>
+  
+  <!-- 댓글 수정 -->
+  <update id="CommentUpdate">
+  	UPDATE BOARD_COMMENT
+		SET COMMCONT = #{commCont}
+		WHERE COMMIDX = #{commIdx}
+  </update>
+  
+  <!-- 댓글 삭제 -->
+  <delete id="CommentDelete">
+  	DELETE FROM BOARD_COMMENT
+		WHERE POSTKEY = #{postKey} AND COMMIDX = #{commIdx}
+  </delete>
+
+  <!-- 댓글 건수 -->
+  <select id="CommentCount">
+  	SELECT COUNT(COMMIDX) COMMCOUNT
+  	FROM BOARD_COMMENT
+		WHERE POSTCATEGORY = #{postCategory} AND COMMIDX > 0;
+  </select>
+  
+  <!-- 도서 요청 목록 -->
+  <select id="BooKRequestList" resultType="com.ebook.manage.vo.RequestVo">
+  	SELECT REQ_KEY, POSTCATEGORY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS
+		FROM REQUEST
+		ORDER BY REQ_KEY DESC
+  </select>
+  
+  <!-- 도서 요청 작성 -->
+  <insert id="BooKRequestInsert">
+  	INSERT INTO REQUEST(REQ_KEY, POSTCATEGORY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS)
+		VALUES (
+		  POST_SEQ.NEXTVAL,
+		  #{postCategory}, #{req_book}, SYSDATE, #{userId}, #{req_cont}, #{req_process}
+		)
+  </insert>
+  
+  <!-- 도서 요청 삭제 -->
+  <delete id="BookRequestDelete">
+  	DELETE FROM REQUEST
+  	WHERE REQ_KEY = #{req_key}
+  </delete>
+  
+   <!-- Q&A 답글 -->
+	  <insert id="ReplayBoardInsert">
+	  	INSERT INTO POST(POSTKEY, POSTCATEGORY, USERID, POSTTITLE, POSTCONTENT, POSTDATE, POSTVIEWCOUNT, BNUM, LVL, STEP, NREF) 
+			VALUES(
+			    POST_SEQ.NEXTVAL, 
+			    #{postCategory}, #{userId}, #{postTitle}, #{postContent}, SYSDATE, 0, 
+			    #{bNum}, #{lvl} +1, #{step} + 1, #{nref}
+			)
+	  </insert>
+	  
+	  <!-- Q&A 답글 수정 -->
+	  <update id="ReplayBoardUpdate">
+	  	UPDATE POST
+			SET STEP = STEP + 1
+			WHERE POSTCATEGORY = #{postCategory}
+						AND NREF = #{ nref }
+						AND STEP > #{ step }
+	  </update>
+  
+</mapper>
+
+
+
+
+

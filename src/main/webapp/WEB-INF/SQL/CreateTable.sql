@@ -1,0 +1,155 @@
+-------------------------------------------------------
+-- 사용자  테이블 생성
+-------------------------------------------------------
+
+CREATE TABLE  EUSER
+(
+     USERID     VARCHAR2(20)  PRIMARY KEY
+   , PASSWD     VARCHAR2(20)  NOT NULL
+   , USERNAME   VARCHAR2(60)  NOT NULL
+   , INDATE     DATE          DEFAULT SYSDATE
+   , EMAIL      VARCHAR2(40) NOT NULL
+   , TEL        VARCHAR(14) NOT NULL
+   , CRUD       NUMBER(4) NOT NULL
+)
+
+INSERT INTO  EUSER ( USERID, PASSWD, USERNAME, TEL, EMAIL, CRUD )
+ VALUES ( 'admin', '1234', '관리자' , '010-1122-3344', 'admin@admin.com', 1111 );
+INSERT INTO  EUSER ( USERID, PASSWD, USERNAME, TEL, EMAIL, CRUD )
+ VALUES ( 'gildong', '1234', '홍길동' , '010-2211-4433', 'gildong@gmail.com', 0000 );
+commit; 
+
+-- 목록
+SELECT USERID, PASSWD, USERNAME, TEL, EMAIL, CRUD
+FROM EUSER;
+
+-------------------------------------------------------
+-- MENUS  테이블 생성
+-------------------------------------------------------
+CREATE TABLE BOARDMENUS
+(
+     MENU_ID     VARCHAR2(6)   NOT  NULL  PRIMARY KEY    
+   , MENU_NAME   VARCHAR2(120) NOT  NULL
+   , MENU_SEQ    NUMBER(5, 0)  NOT  NULL
+)
+
+INSERT INTO BOARDMENUS ( MENU_ID, MENU_NAME, MENU_SEQ) VALUES  ('MENU01', '자료실', 1);
+INSERT INTO BOARDMENUS ( MENU_ID, MENU_NAME, MENU_SEQ) VALUES  ('MENU02', '공지사항', 2);
+COMMIT; 
+
+SELECT MENU_ID, MENU_NAME, MENU_SEQ
+FROM BOARDMENUS
+ORDER BY MENU_SEQ ASC;
+
+-------------------------------------------------------
+-- 공지사항 테이블 생성
+-------------------------------------------------------
+CREATE  TABLE  BOARDNOTICE
+(
+    IDX           NUMBER( 5, 0 )    PRIMARY KEY
+    , MENU_ID      VARCHAR2(6)       NOT NULL REFERENCES BOARDMENUS (MENU_ID)
+    , TITLE         VARCHAR2(300)     NOT NULL
+    , CONT          VARCHAR2(4000) 
+    , WRITER        VARCHAR2(50) 
+    , REGDATE       DATE              DEFAULT  SYSDATE
+    , READCOUNT     NUMBER( 6, 0 )    DEFAULT  0
+)
+
+-- 게시글 추가
+INSERT INTO BOARDNOTICE(IDX, MENU_ID, TITLE, CONT, WRITER, REGDATE, READCOUNT) 
+VALUES(
+    ( SELECT NVL(MAX(IDX),0)+1 FROM BOARDNOTICE ), 
+    'MENU02', '공지사항 테스트', '목록', '관리자', SYSDATE, 0
+);
+
+INSERT INTO BOARDNOTICE(IDX, MENU_ID, TITLE, CONT, WRITER, REGDATE, READCOUNT) 
+VALUES(
+    ( SELECT NVL(MAX(IDX),0)+1 FROM BOARDNOTICE ), 
+    'MENU02', '공지사항 테스트 2', '목록', '관리자', SYSDATE, 0
+);
+COMMIT; 
+
+-- 게시글 조회
+SELECT IDX, MENU_ID, TITLE, CONT, WRITER, TO_CHAR(REGDATE, 'YYYY-MM-DD')  REGDATE, READCOUNT
+FROM BOARDNOTICE;
+
+-- 게시글 보기
+SELECT IDX, MENU_ID, TITLE, NVL(CONT, ' ') CONT, WRITER, TO_CHAR(REGDATE, 'YYYY-MM-DD')  REGDATE, READCOUNT
+FROM BOARDNOTICE
+WHERE IDX = 1;
+
+-- 게시글 수정
+UPDATE BOARDNOTICE
+SET TITLE = '공지사항 테스트 1',
+    CONT = '게시글 수정 글쓰기 테스트'
+WHERE IDX = 1;
+
+-- 게시글 삭제
+DELETE FROM BOARDNOTICE
+WHERE IDX = 2;
+
+-------------------------------------------------------
+-- 요청 관리 테이블 생성
+-------------------------------------------------------
+CREATE TABLE REQUEST_MANAGE(
+    REQ_KEY NUMBER( 5, 0 )    PRIMARY KEY,
+    REQ_BOOK VARCHAR2(200)     NOT NULL,
+    REQ_DATE DATE              DEFAULT  SYSDATE,
+    USERID VARCHAR2(20) NOT NULL REFERENCES EUSER (USERID),
+    REQ_CONT VARCHAR2(400) NOT NULL,
+    REQ_PROCESS VARCHAR2(10) NOT NULL
+)
+
+-- 요청 
+INSERT INTO REQUEST_MANAGE(REQ_KEY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS) 
+VALUES(
+    ( SELECT NVL(MAX(REQ_KEY),0)+1 FROM REQUEST_MANAGE ), 
+    '트렌드 코리아 2024', SYSDATE, 'gildong', '2024년 트렌드 빨리 알고 싶습니다.', '요청중'
+);
+
+INSERT INTO REQUEST_MANAGE(REQ_KEY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS) 
+VALUES(
+    ( SELECT NVL(MAX(REQ_KEY),0)+1 FROM REQUEST_MANAGE ), 
+    '홍길동전', SYSDATE, 'gildong', '책 읽고 싶은데 검색했더니 안나와요, 읽을 수 있게 요청합니다.', '승인'
+);
+
+INSERT INTO REQUEST_MANAGE(REQ_KEY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS) 
+VALUES(
+    ( SELECT NVL(MAX(REQ_KEY),0)+1 FROM REQUEST_MANAGE ), 
+    '주몽', SYSDATE, 'gildong', '최신년도로 발간된 책으로 읽고 싶습니다.', '반려'
+);
+
+COMMIT;
+
+-- 요청 목록 : 기본 정렬
+SELECT REQ_KEY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS
+FROM REQUEST_MANAGE
+ORDER BY REQ_KEY ASC;
+
+-- 요청 목록 : 날짜 순 정렬
+SELECT REQ_KEY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS
+FROM REQUEST_MANAGE
+ORDER BY REQ_DATE ASC;
+
+-- 요청 목록 : 요청중
+SELECT REQ_KEY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS
+FROM REQUEST_MANAGE
+WHERE REQ_PROCESS = '요청중'
+ORDER BY REQ_DATE ASC;
+
+-- 요청 목록 : 승인
+SELECT REQ_KEY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS
+FROM REQUEST_MANAGE
+WHERE REQ_PROCESS = '승인'
+ORDER BY REQ_DATE ASC;
+
+-- 요청 목록 : 반려
+SELECT REQ_KEY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS
+FROM REQUEST_MANAGE
+WHERE REQ_PROCESS = '반려'
+ORDER BY REQ_DATE ASC;
+
+-------------------------------------------------------
+-- 도서 관리 테이블 생성
+-------------------------------------------------------
+

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <typeAliases>
+        <typeAlias type="com.ebook.user.vo.UsersVO" alias="UsersVO"/>
+        <typeAlias type="com.ebook.board.vo.BoardVo" alias="BoardVo"/>
+        <typeAlias type="com.ebook.api.vo.ApiDTO" alias="ApiDTO"/>
+
+    </typeAliases>
+
+    <typeHandlers>
+        <typeHandler handler="com.ebook.api.LongHandler" javaType="String" jdbcType="LONGVARCHAR"/>
+    </typeHandlers>
+
+
+</configuration>
