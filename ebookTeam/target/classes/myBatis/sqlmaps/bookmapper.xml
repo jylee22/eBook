@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="booksMapper">
+
+    <insert id="libinsert">
+        MERGE INTO MYLIBRARY
+            USING dual
+        ON (isbn = ${isbn})
+            WHEN NOT MATCHED THEN
+        INSERT (id, userId, isbn)
+        values (book_seq.nextval, #{userId}, #{isbn})
+    </insert>
+
+
+    <select id="libselect" resultMap="myLibDTO">
+        select a.id
+             , a.isbn
+             , a.userId
+             , b.title
+             , b.image
+        from MYLIBRARY a
+                 INNER JOIN BOOKS B
+                            on a.isbn = b.isbn
+        WHERE a.userId = #{userId}
+        ORDER BY a.id desc
+    </select>
+
+    <!--    <resultMap type="com.ebook.api.vo.ApiDTO" id="apiDTO">-->
+    <!--        <id property="title" column="title"/>-->
+    <!--        <id property="image" column="image"/>-->
+    <!--    </resultMap>-->
+
+    <resultMap id="myLibDTO" type="com.ebook.mylib.dto.MyLibDTO">
+        <id property="id" column="id"/>
+        <result property="userId" column="userId"/>
+        <result property="isbn" column="isbn"/>
+        <collection property="apiDTO" javaType="ApiDTO">
+            <result property="title" column="title"/>
+            <result property="image" column="image"/>
+        </collection>
+    </resultMap>
+
+
+</mapper>

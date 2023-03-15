@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Manage">
+	<!-- 회원 관리 : 목록 -->
+  <select id="UserList" resultType="com.ebook.manage.vo.UserVo">
+	SELECT USERIDX, USERID, USERNAME, USEREMAIL, USERPHONE, JOINDATE
+	FROM EUSER
+	ORDER BY USERIDX ASC
+  </select>
+  
+  <!-- 회원 관리 : 정보 -->
+  <select id="UserView" resultType="com.ebook.manage.vo.UserVo">
+	SELECT USERIDX, USERID, USERNAME, USEREMAIL, USERPHONE, JOINDATE
+	FROM EUSER
+	WHERE USERID = #{userId}
+  </select>
+  
+  <!-- 메뉴 목록 -->
+  <select id="MenuList" resultType="com.ebook.manage.vo.MenuVo">
+	SELECT MENU_SEQ, MENU_CTGR, POSTCATEGORY, MENU_NAME
+	FROM BOARDMENUS
+	ORDER BY MENU_SEQ
+  </select>
+  
+  <!-- 메뉴 목록 -->
+  <select id="MenuView" resultType="com.ebook.manage.vo.MenuVo">
+	SELECT MENU_SEQ, MENU_CTGR, POSTCATEGORY, MENU_NAME
+	FROM BOARDMENUS
+	WHERE MENU_SEQ = #{menu_seq}
+	ORDER BY MENU_SEQ
+  </select>
+
+  <!-- 메뉴 정보보기 -->
+  <select id="Menu" resultType="com.ebook.manage.vo.MenuVo">
+  	SELECT MENU_SEQ, MENU_CTGR, POSTCATEGORY, MENU_NAME
+  	FROM BOARDMENUS
+  	WHERE MENU_SEQ = #{menu_seq}
+  </select>
+  
+  <!-- 메뉴 생성 -->
+  <insert id="MenuInsert">
+  	INSERT INTO BOARDMENUS(MENU_SEQ, MENU_CTGR, POSTCATEGORY, MENU_NAME)
+  	VALUES(
+  		POST_SEQ.NEXTVAL, 
+  		#{menu_ctgr}, #{postCategory}, #{menu_name}
+  	)
+  </insert>
+  
+  <!-- 메뉴 수정 -->
+  <update id="MenuUpdate" >
+  	UPDATE BOARDMENUS
+  	SET MENU_CTGR = #{menu_ctgr}, POSTCATEGORY = #{postCategory}, MENU_NAME = #{menu_name}
+  	WHERE MENU_SEQ = #{menu_seq}
+  </update>
+  
+  <!-- 메뉴 삭제 -->
+  <delete id="MenuDelete">
+  	DELETE FROM BOARDMENUS
+  	WHERE MENU_SEQ = #{menu_seq}
+  </delete>
+  
+ 	<!-- 관리 메뉴 -->
+  <select id="ManageMenu" resultType="com.ebook.manage.vo.MenuVo">
+		SELECT MENU_SEQ, MENU_CTGR, POSTCATEGORY, MENU_NAME
+		FROM BOARDMENUS
+		WHERE MENU_CTGR = 1
+		ORDER BY MENU_SEQ
+   </select>
+   
+	<!-- 게시판 메뉴 -->
+	<select id="BoardMenu" resultType="com.ebook.manage.vo.MenuVo">
+		SELECT MENU_SEQ, MENU_CTGR, POSTCATEGORY, MENU_NAME
+		FROM BOARDMENUS
+		WHERE MENU_CTGR = 2
+		ORDER BY MENU_SEQ
+  </select>
+  
+	<!-- 마이페이지 메뉴 -->
+	<select id="MyMenu" resultType="com.ebook.manage.vo.MenuVo">
+		SELECT MENU_SEQ, MENU_CTGR, POSTCATEGORY, MENU_NAME
+		FROM BOARDMENUS
+		WHERE MENU_CTGR = 3
+		ORDER BY MENU_SEQ
+  </select>
+	
+	<!-- 구독 관리 : 목록 -->
+  <select id="SubscrList" resultType="com.ebook.subscr.vo.SubscrVo">
+		SELECT SM.SUBSCRIBEKEY
+		       , U.USERID
+		       , U.USERNAME
+		       , U.JOINDATE
+		       , SM.SUBDATE
+		       , SM.EXDATE, SM.PAYMENT,
+		CONCAT(SUBSTR(CARDNUM,1,4),'-') || CONCAT(SUBSTR(CARDNUM,5,4),'-') || CONCAT(SUBSTR(CARDNUM,9,4),'') AS CARDNUM
+		FROM SUBSCRIBEMANAGE SM, EUSER U
+		WHERE U.USERID = SM.USERID
+		ORDER BY SUBSCRIBEKEY ASC
+  </select>
+  
+  <!-- 구독 관리 : 정보보기 -->
+  <select id="SubscrView" resultMap="subscrVO">
+		SELECT SM.SUBSCRIBEKEY
+		     	, SM.USERID
+		     	, U.USERNAME
+		     	, U.JOINDATE
+		     	, CONCAT(SUBSTR(CARDNUM,1,4),'-') || CONCAT(SUBSTR(CARDNUM,5,4),'-') || CONCAT(SUBSTR(CARDNUM,9,4),'') AS CARDNUM
+		     	, SM.SUBDATE
+		     	, SM.EXDATE
+		     	,SM.PAYMENT
+		FROM SUBSCRIBEMANAGE SM
+		    	INNER JOIN EUSER U
+		    	    ON SM.USERID = U.USERID
+		WHERE SM.USERID = #{userId}
+  </select>
+
+	<resultMap id="subscrVO" type="com.ebook.subscr.vo.SubscrVo">
+		<id property="subscribeKey" column="subscribeKey"/>
+		<result property="subDate" column="subDate"/>
+		<result property="exDate" column="exDate"/>
+		<result property="cardPw" column="cardPw"/>
+		<result property="payMent" column="payMent"/>
+		<result property="cardNum" column="cardNum"/>
+		<result property="userId" column="userId"></result>
+		<collection property="usersVO" javaType="UsersVO">
+			<result property="userName" column="userName"/>
+			<result property="joinDate" column="joinDate"/>
+		</collection>
+	</resultMap>
+  
+  <!-- 구독 신청 -->
+  <insert id="SubscrInsert">
+	  MERGE
+		  INTO SUBSCRIBEMANAGE
+			  using dual
+			  ON (USERID = #{userId})
+			  WHEN MATCHED THEN
+				  UPDATE
+					  SET CARDNUM = #{cardNum},
+					      SUBDATE = sysdate,
+						  EXDATE= sysdate+30
+			  WHEN NOT MATCHED THEN
+				  	INSERT(SUBSCRIBEKEY, USERID, PAYMENT, CARDNUM, CARDPW, SUBDATE, EXDATE)
+					  VALUES (BOOK_SEQ.NEXTVAL, #{userId}, #{payMent}, #{cardNum}, #{cardPw}, sysdate, (sysdate + 30))
+  </insert>
+  
+  <!-- 요청 관리 : 목록 -->
+  <select id="RequestList" resultType="com.ebook.manage.vo.RequestVo">
+		SELECT REQ_KEY, POSTCATEGORY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS
+		FROM REQUEST
+  </select>
+  
+  <!-- 요청 관리 : 보기 -->
+  <select id="RequestView" resultType="com.ebook.manage.vo.RequestVo">
+		SELECT REQ_KEY, POSTCATEGORY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS
+		FROM REQUEST
+		WHERE REQ_KEY = #{req_key}
+  </select>
+  
+  <!-- 요청 관리 : 정보 가져오기 -->
+  <select id="Request" resultType="com.ebook.manage.vo.RequestVo">
+		SELECT REQ_KEY, POSTCATEGORY, REQ_BOOK, REQ_DATE, USERID, REQ_CONT, REQ_PROCESS
+		FROM REQUEST
+		WHERE REQ_KEY = #{req_key}
+  </select>
+  
+  <!-- 요청 관리 : 수정 -->
+  <update id="RequestUpdate">
+		UPDATE REQUEST
+		SET REQ_PROCESS = #{req_process}
+		WHERE REQ_KEY = #{req_key}
+  </update>
+
+	<!-- 현재 메뉴 가져오기 -->
+	<select id="PageMenu" resultType="com.ebook.manage.vo.MenuVo">
+		SELECT MENU_SEQ, MENU_CTGR, POSTCATEGORY, MENU_NAME
+		FROM BOARDMENUS
+		WHERE POSTCATEGORY = #{postCategory}
+	</select>
+</mapper>   
+
+
+
+
+
+
+

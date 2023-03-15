@@ -1,0 +1,97 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>    
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<div class="btn-pagination">
+	<ul class="btn-group">
+		<c:set var="showPrev"  value="${page.showPagePrev}" />
+    <c:set var="showNext"  value="${page.showPageNext}" />
+    
+    <c:set var="startNum"        value="${page.pageStartNum}" />
+    <c:set var="endNum"          value="${page.pagEendNum}" />
+    <c:set var="pageGrpNum"      value="${page.pageGrpNum}" />
+    
+    <c:set var="totalCount"      value="${page.totalCount}" />
+    <c:set var="pageCount"       value="${page.pageCount}" />
+    <c:set var="totalPageCount"  value="${page.totalPageCount}" />
+    
+    <c:set var="nowPage"         value="${page.nowPage}" />
+    <c:set var="prevNowPage"     value="${page.prevNowPage}" />
+    <c:set var="nextNowPage"     value="${page.nextNowPage}" />
+    
+    <c:set var="postCategory"         value="${page.postCategory}" />
+    
+    <c:if test="${showPrev eq true}">
+    	<li class="item prev">
+	      <a class="btn btn-secondary" href="/board/list?postCategory=${postCategory}&nowPage=${prevNowPage}&pageCount=${pageCount}&pageGrpNum=${pageGrpNum-1}">
+	      [이전 ${totalPageCount} 개]
+	      </a>
+      </li>
+      </c:if> 
+      
+      <c:forEach var="pagenum"  begin="${page.pageStartNum}" end="${page.pagEendNum}" step="1">
+       <li class="item number">
+       
+       <a class="btn btn-secondary" href="/board/list?postCategory=${postCategory}&nowPage=${pagenum}&pageCount=${pageCount}&pageGrpNum=${pageGrpNum}">${pagenum}</a>
+       
+       </li>
+      </c:forEach> 
+      
+      <c:if test="${showNext eq true}">
+      <li class="item next">
+		      <a class="btn btn-secondary" href="/board/list?postCategory=${postCategory}&nowPage=${nextNowPage}&pageCount=${pageCount}&pageGrpNum=${pageGrpNum+1}">
+	      [다음 ${totalPageCount} 개]
+	      </a>
+      </li>
+      </c:if>
+   
+	</ul>
+  <%-- <table width="500" height="25" align="center">
+    <tr>
+    <td width="500" height="25" align="center">                                               
+		  <c:set var="showPrev"  value="${page.showPagePrev}" />
+      <c:set var="showNext"  value="${page.showPageNext}" />
+      
+      <c:set var="startNum"        value="${page.pageStartNum}" />
+      <c:set var="endNum"          value="${page.pagEendNum}" />
+      <c:set var="pageGrpNum"      value="${page.pageGrpNum}" />
+      
+      <c:set var="totalCount"      value="${page.totalCount}" />
+      <c:set var="pageCount"       value="${page.pageCount}" />
+      <c:set var="totalPageCount"  value="${page.totalPageCount}" />
+      
+      <c:set var="nowPage"         value="${page.nowPage}" />
+      <c:set var="prevNowPage"     value="${page.prevNowPage}" />
+      <c:set var="nextNowPage"     value="${page.nextNowPage}" />
+      
+      <c:set var="postCategory"         value="${page.postCategory}" />
+            
+			<c:if test="${showPrev eq true}">
+         <a class="btn btn-secondary" href="/board/list?postCategory=${postCategory}&nowPage=${prevNowPage}&pageCount=${pageCount}&pageGrpNum=${pageGrpNum-1}">
+         [이전 ${totalPageCount} 개]
+         </a>
+      </c:if> 
+      
+ 
+      <!--  1 2 3 4 5 6 7 8 9 10 -->
+      <c:forEach var="pagenum"  begin="${page.pageStartNum}" end="${page.pagEendNum}" step="1">
+       &nbsp;&nbsp;
+       
+       <a class="btn btn-secondary" href="/board/list?postCategory=${postCategory}&nowPage=${pagenum}&pageCount=${pageCount}&pageGrpNum=${pageGrpNum}">${pagenum}</a>
+       
+       &nbsp;&nbsp;
+      </c:forEach>      
+      
+			 <c:if test="${showNext eq true}">
+      <a class="btn btn-secondary" href="/board/list?postCategory=${postCategory}&nowPage=${nextNowPage}&pageCount=${pageCount}&pageGrpNum=${pageGrpNum+1}">
+      [다음 ${totalPageCount} 개]
+      </a>
+      </c:if>
+      
+    </td>
+   </tr> 
+   </table> --%> 
+ 
+</div>
